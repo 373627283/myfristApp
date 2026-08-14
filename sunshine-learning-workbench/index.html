@@ -380,6 +380,89 @@
     /* Hidden file input */
     #importFile { display: none; }
 
+    .admin-entry {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.85);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .admin-entry.logged-in {
+      background: rgba(255, 179, 0, 0.35);
+      border-color: var(--sun);
+    }
+    .admin-panel-section {
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .admin-panel-section:last-child { border-bottom: none; margin-bottom: 0; }
+    .admin-panel-section h4 {
+      font-size: 14px;
+      color: var(--green-dark);
+      margin-bottom: 10px;
+    }
+    .admin-action-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid #ffcdd2;
+      background: #fff5f5;
+      color: #c62828;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .admin-action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #eee;
+      background: #f9f9f9;
+      color: #999;
+    }
+    .admin-action-btn.secondary {
+      border-color: var(--green-light);
+      background: var(--green-bg);
+      color: var(--green-dark);
+    }
+    .login-field {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    .login-field:focus { border-color: var(--green-main); }
+    .login-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .redeem-history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #fafafa;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .redeem-history-item button {
+      background: #ffebee;
+      border: none;
+      color: #c62828;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
     @media (max-width: 600px) {
       .main-layout { padding: 10px; }
       .sidebar { width: 58px; }
@@ -396,7 +479,10 @@
       <span class="logo-sun">☀️</span>
       <span class="logo-title">阳光学习能量站</span>
     </div>
-    <input type="text" class="name-input" id="childName" placeholder="孩子姓名" maxlength="8">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="text" class="name-input" id="childName" placeholder="孩子姓名" maxlength="8">
+      <button class="admin-entry" id="adminEntry" title="家长管理">⚙️</button>
+    </div>
   </div>
   <div class="stats-row">
     <div class="stat-chip">🔥 连续打卡 <strong id="streakDays">0</strong> 天</div>
@@ -439,6 +525,39 @@
     <p class="balance">当前阳光：<strong id="shopBalance">0</strong> ☀️</p>
     <div id="shopList"></div>
     <button class="modal-close" id="shopClose">关闭</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminLoginModal">
+  <div class="modal">
+    <h3>🔐 家长登录</h3>
+    <p class="login-hint" id="loginHint">默认密码：888888（首次登录后可修改）</p>
+    <input type="password" class="login-field" id="adminPassword" placeholder="请输入管理密码" maxlength="20">
+    <button class="shop-btn" style="width:100%;padding:10px;border-radius:10px;" id="adminLoginBtn">登录</button>
+    <button class="modal-close" id="adminLoginClose">取消</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminPanelModal">
+  <div class="modal">
+    <h3>⚙️ 家长管理</h3>
+    <div class="admin-panel-section">
+      <h4>撤销操作</h4>
+      <button class="admin-action-btn" id="undoCheckinBtn">↩️ 撤销今日打卡</button>
+      <button class="admin-action-btn" id="undoLastRedeemBtn">↩️ 撤销最近一次兑换</button>
+    </div>
+    <div class="admin-panel-section" id="redeemHistorySection">
+      <h4>兑换记录</h4>
+      <div id="redeemHistoryList"></div>
+    </div>
+    <div class="admin-panel-section">
+      <h4>修改密码</h4>
+      <input type="password" class="login-field" id="newPassword" placeholder="新密码（至少4位）" maxlength="20">
+      <input type="password" class="login-field" id="confirmPassword" placeholder="确认新密码" maxlength="20">
+      <button class="admin-action-btn secondary" id="changePasswordBtn">保存新密码</button>
+    </div>
+    <button class="admin-action-btn secondary" id="adminLogoutBtn">退出登录</button>
+    <button class="modal-close" id="adminPanelClose">关闭</button>
   </div>
 </div>
 
@@ -533,9 +652,13 @@ const REWARDS = [
 const TASK_REWARD = 5;
 const CHECKIN_REWARD = 20;
 const STORAGE_KEY = 'sunshine_learning_v1';
+const ADMIN_KEY = 'sunshine_admin_v1';
+const ADMIN_SESSION_KEY = 'sunshine_admin_session';
+const DEFAULT_ADMIN_PASSWORD = '888888';
 
 let state = loadState();
 let currentSubject = SUBJECTS[0].id;
+let isAdminLoggedIn = sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
 
 function defaultState() {
   return {
@@ -559,6 +682,182 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function loadAdminConfig() {
+  try {
+    const raw = localStorage.getItem(ADMIN_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAdminConfig(config) {
+  localStorage.setItem(ADMIN_KEY, JSON.stringify(config));
+}
+
+async function getStoredPasswordHash() {
+  const config = loadAdminConfig();
+  if (config.passwordHash) return config.passwordHash;
+  const hash = await hashPassword(DEFAULT_ADMIN_PASSWORD);
+  saveAdminConfig({ passwordHash: hash });
+  return hash;
+}
+
+async function verifyAdminPassword(password) {
+  const inputHash = await hashPassword(password);
+  const storedHash = await getStoredPasswordHash();
+  return inputHash === storedHash;
+}
+
+function setAdminSession(loggedIn) {
+  isAdminLoggedIn = loggedIn;
+  if (loggedIn) sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+  else sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  updateAdminEntry();
+}
+
+function updateAdminEntry() {
+  const btn = document.getElementById('adminEntry');
+  btn.classList.toggle('logged-in', isAdminLoggedIn);
+  btn.title = isAdminLoggedIn ? '家长管理（已登录）' : '家长管理';
+}
+
+function openAdminEntry() {
+  if (isAdminLoggedIn) {
+    renderAdminPanel();
+    document.getElementById('adminPanelModal').classList.add('show');
+  } else {
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminLoginModal').classList.add('show');
+    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+  }
+}
+
+function renderAdminPanel() {
+  const today = todayStr();
+  const checkedInToday = state.lastCheckin === today;
+  document.getElementById('undoCheckinBtn').disabled = !checkedInToday;
+  document.getElementById('undoCheckinBtn').textContent = checkedInToday
+    ? `↩️ 撤销今日打卡（-${CHECKIN_REWARD}☀️）`
+    : '↩️ 撤销今日打卡（今天未打卡）';
+
+  const hasRedeem = state.redeemedRewards.length > 0;
+  const last = state.redeemedRewards[state.redeemedRewards.length - 1];
+  document.getElementById('undoLastRedeemBtn').disabled = !hasRedeem;
+  document.getElementById('undoLastRedeemBtn').textContent = hasRedeem
+    ? `↩️ 撤销最近一次兑换（+${last.cost || REWARDS.find(r => r.id === last.id)?.cost || 0}☀️）`
+    : '↩️ 撤销最近一次兑换（暂无记录）';
+
+  const list = document.getElementById('redeemHistoryList');
+  if (!state.redeemedRewards.length) {
+    list.innerHTML = '<p style="font-size:13px;color:#999;">暂无兑换记录</p>';
+    return;
+  }
+  list.innerHTML = [...state.redeemedRewards].reverse().map((item, revIdx) => {
+    const reward = REWARDS.find(r => r.id === item.id);
+    const cost = item.cost || reward?.cost || 0;
+    const realIdx = state.redeemedRewards.length - 1 - revIdx;
+    return `<div class="redeem-history-item">
+      <span>${reward?.name || item.id} · ${item.date} · ${cost}☀️</span>
+      <button data-idx="${realIdx}">撤销</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => undoRedemption(+btn.dataset.idx));
+  });
+}
+
+function undoCheckin() {
+  const today = todayStr();
+  if (state.lastCheckin !== today) {
+    showToast('今天还没有打卡，无需撤销');
+    return;
+  }
+  if (state._checkinBackup) {
+    state.sunshine = state._checkinBackup.sunshine;
+    state.streak = state._checkinBackup.streak;
+    state.lastCheckin = state._checkinBackup.lastCheckin;
+    delete state._checkinBackup;
+  } else {
+    state.sunshine = Math.max(0, state.sunshine - CHECKIN_REWARD);
+    state.streak = Math.max(0, state.streak - 1);
+    state.lastCheckin = '';
+  }
+  saveState();
+  showToast(`已撤销今日打卡，-${CHECKIN_REWARD}☀️`);
+  render();
+  renderAdminPanel();
+}
+
+function undoRedemption(index) {
+  if (index < 0 || index >= state.redeemedRewards.length) return;
+  const item = state.redeemedRewards[index];
+  const reward = REWARDS.find(r => r.id === item.id);
+  const cost = item.cost || reward?.cost || 0;
+  state.redeemedRewards.splice(index, 1);
+  state.sunshine += cost;
+  saveState();
+  showToast(`已撤销兑换：${reward?.name || item.id}，+${cost}☀️`);
+  render();
+  renderAdminPanel();
+}
+
+function undoLastRedemption() {
+  if (!state.redeemedRewards.length) {
+    showToast('暂无兑换记录');
+    return;
+  }
+  undoRedemption(state.redeemedRewards.length - 1);
+}
+
+async function loginAdmin() {
+  const password = document.getElementById('adminPassword').value;
+  if (!password) {
+    showToast('请输入密码');
+    return;
+  }
+  const ok = await verifyAdminPassword(password);
+  if (!ok) {
+    showToast('密码错误');
+    return;
+  }
+  setAdminSession(true);
+  document.getElementById('adminLoginModal').classList.remove('show');
+  renderAdminPanel();
+  document.getElementById('adminPanelModal').classList.add('show');
+  showToast('家长登录成功');
+}
+
+async function changeAdminPassword() {
+  const next = document.getElementById('newPassword').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  if (next.length < 4) {
+    showToast('新密码至少 4 位');
+    return;
+  }
+  if (next !== confirm) {
+    showToast('两次密码不一致');
+    return;
+  }
+  const hash = await hashPassword(next);
+  saveAdminConfig({ passwordHash: hash });
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  showToast('密码修改成功');
+}
+
+function logoutAdmin() {
+  setAdminSession(false);
+  document.getElementById('adminPanelModal').classList.remove('show');
+  showToast('已退出家长登录');
 }
 
 function taskKey(subjectId, unitIdx, taskIdx) {
@@ -758,6 +1057,11 @@ function yesterdayStr() {
 function doCheckin() {
   const today = todayStr();
   if (state.lastCheckin === today) return;
+  state._checkinBackup = {
+    lastCheckin: state.lastCheckin,
+    streak: state.streak,
+    sunshine: state.sunshine
+  };
   const yesterday = yesterdayStr();
   if (state.lastCheckin === yesterday) {
     state.streak += 1;
@@ -775,7 +1079,7 @@ function redeemReward(id) {
   const reward = REWARDS.find(r => r.id === id);
   if (!reward || state.sunshine < reward.cost) return;
   state.sunshine -= reward.cost;
-  state.redeemedRewards.push({ id, date: todayStr() });
+  state.redeemedRewards.push({ id, date: todayStr(), cost: reward.cost });
   saveState();
   showToast(`兑换成功：${reward.name}（请找家长确认哦）`);
   render();
@@ -841,6 +1145,29 @@ document.getElementById('shopModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
 });
 
+document.getElementById('adminEntry').addEventListener('click', openAdminEntry);
+document.getElementById('adminLoginBtn').addEventListener('click', loginAdmin);
+document.getElementById('adminPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loginAdmin();
+});
+document.getElementById('adminLoginClose').addEventListener('click', () => {
+  document.getElementById('adminLoginModal').classList.remove('show');
+});
+document.getElementById('adminLoginModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+document.getElementById('adminPanelClose').addEventListener('click', () => {
+  document.getElementById('adminPanelModal').classList.remove('show');
+});
+document.getElementById('adminPanelModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+document.getElementById('undoCheckinBtn').addEventListener('click', undoCheckin);
+document.getElementById('undoLastRedeemBtn').addEventListener('click', undoLastRedemption);
+document.getElementById('changePasswordBtn').addEventListener('click', changeAdminPassword);
+document.getElementById('adminLogoutBtn').addEventListener('click', logoutAdmin);
+
+updateAdminEntry();
 render();
 </script>
 </body>
