@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>阳光学习能量站</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark: #2d8f4e;
+      --green-main: #3cb371;
+      --green-light: #e8f5e9;
+      --green-bg: #f0faf2;
+      --sun: #ffb300;
+      --sun-light: #fff8e1;
+      --text: #2c3e2c;
+      --text-muted: #5a7a5a;
+      --card-shadow: 0 2px 12px rgba(45, 143, 78, 0.12);
+      --radius: 14px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(160deg, #e8f8ec 0%, #f5fff7 40%, #fffef5 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--green-dark), var(--green-main));
+      color: #fff;
+      padding: 16px 20px 20px;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 20px rgba(45, 143, 78, 0.3);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-sun { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .logo-title { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+    .name-input {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      color: #fff;
+      font-size: 15px;
+      padding: 6px 14px;
+      width: 120px;
+      outline: none;
+    }
+    .name-input::placeholder { color: rgba(255,255,255,0.7); }
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .stat-chip {
+      background: rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(4px);
+    }
+    .stat-chip strong { font-size: 16px; }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      background: rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      border-radius: 18px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.35); }
+    .btn-sm.primary { background: var(--sun); border-color: var(--sun); color: #5d4037; font-weight: 600; }
+    .btn-sm.primary:hover { background: #ffc107; }
+    .btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Layout */
+    .main-layout {
+      display: flex;
+      gap: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: calc(100vh - 160px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 72px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 8px;
+    }
+    .subject-btn {
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: #fff;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s;
+    }
+    .subject-btn .icon { font-size: 22px; }
+    .subject-btn:hover { transform: translateY(-2px); }
+    .subject-btn.active {
+      color: #fff;
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    /* Content */
+    .content { flex: 1; min-width: 0; }
+
+    /* Today recommend */
+    .recommend-panel {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid var(--sun);
+    }
+    .recommend-panel h3 {
+      font-size: 15px;
+      color: var(--green-dark);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recommend-list { display: flex; flex-direction: column; gap: 8px; }
+    .recommend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--green-bg);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 14px;
+    }
+    .recommend-item:hover { background: var(--green-light); }
+    .recommend-item .tag {
+      font-size: 11px;
+      background: var(--green-main);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .recommend-item .reward { margin-left: auto; color: var(--sun); font-size: 12px; font-weight: 600; }
+
+    /* Subject header */
+    .subject-header {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    .subject-header h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .progress-wrap { display: flex; align-items: center; gap: 12px; }
+    .progress-bar-bg {
+      flex: 1;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.4s ease;
+    }
+    .progress-text { font-size: 14px; font-weight: 600; white-space: nowrap; }
+
+    /* Unit cards */
+    .units-grid { display: flex; flex-direction: column; gap: 14px; }
+    .unit-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--card-shadow);
+    }
+    .unit-card h4 {
+      font-size: 15px;
+      color: var(--green-dark);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--green-light);
+    }
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--green-bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .task-item:hover { background: var(--green-light); }
+    .task-item.done {
+      opacity: 0.65;
+      background: #f5f5f5;
+    }
+    .task-item.done .task-name { text-decoration: line-through; color: #999; }
+    .task-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--green-main);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .task-item.done .task-checkbox {
+      background: var(--green-main);
+      color: #fff;
+      border-color: var(--green-main);
+    }
+    .task-name { flex: 1; font-size: 14px; }
+    .task-reward {
+      font-size: 12px;
+      color: var(--sun);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* Shop FAB */
+    .shop-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sun), #ff8f00);
+      border: none;
+      color: #fff;
+      font-size: 26px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 143, 0, 0.45);
+      transition: transform 0.2s;
+      z-index: 100;
+    }
+    .shop-fab:hover { transform: scale(1.1); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .modal h3 {
+      font-size: 18px;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal .balance {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .modal .balance strong { color: var(--sun); font-size: 18px; }
+    .shop-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--sun-light);
+      margin-bottom: 10px;
+    }
+    .shop-item-info h4 { font-size: 15px; margin-bottom: 3px; }
+    .shop-item-info p { font-size: 12px; color: var(--text-muted); }
+    .shop-item .cost { font-size: 14px; font-weight: 700; color: var(--sun); margin-right: 10px; }
+    .shop-btn {
+      background: var(--sun);
+      border: none;
+      color: #5d4037;
+      border-radius: 18px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .shop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .modal-close {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: var(--green-light);
+      border: none;
+      border-radius: 12px;
+      color: var(--green-dark);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--green-dark);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 300;
+      transition: transform 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Hidden file input */
+    #importFile { display: none; }
+
+    @media (max-width: 600px) {
+      .main-layout { padding: 10px; }
+      .sidebar { width: 58px; }
+      .subject-btn { width: 52px; height: 52px; font-size: 10px; }
+      .subject-btn .icon { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo-area">
+      <span class="logo-sun">☀️</span>
+      <span class="logo-title">阳光学习能量站</span>
+    </div>
+    <input type="text" class="name-input" id="childName" placeholder="孩子姓名" maxlength="8">
+  </div>
+  <div class="stats-row">
+    <div class="stat-chip">🔥 连续打卡 <strong id="streakDays">0</strong> 天</div>
+    <div class="stat-chip">☀️ 阳光值 <strong id="sunshine">0</strong></div>
+    <div class="stat-chip">⭐ 等级 <strong id="level">1</strong></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-sm primary" id="checkinBtn">📅 今日打卡 +20☀️</button>
+    <button class="btn-sm" id="exportBtn">📤 导出</button>
+    <button class="btn-sm" id="importBtn">📥 导入</button>
+    <input type="file" id="importFile" accept=".json">
+  </div>
+</div>
+
+<div class="main-layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="recommend-panel" id="recommendPanel">
+      <h3>✨ 今日推荐</h3>
+      <div class="recommend-list" id="recommendList"></div>
+    </div>
+    <div class="subject-header" id="subjectHeader">
+      <h2 id="subjectTitle"></h2>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-text" id="progressText">0%</span>
+      </div>
+    </div>
+    <div class="units-grid" id="unitsGrid"></div>
+  </main>
+</div>
+
+<button class="shop-fab" id="shopFab" title="阳光兑换商店">🎁</button>
+
+<div class="modal-overlay" id="shopModal">
+  <div class="modal">
+    <h3>🎁 阳光兑换商店</h3>
+    <p class="balance">当前阳光：<strong id="shopBalance">0</strong> ☀️</p>
+    <div id="shopList"></div>
+    <button class="modal-close" id="shopClose">关闭</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUBJECTS = [
+  {
+    id: 'chinese', name: '语文', icon: '📖', color: '#e74c3c',
+    units: [
+      { title: '第一单元 · 一花一鸟总关情', tasks: ['《白鹭》预习与朗读', '《落花生》课后思考', '生字词听写（第1单元）', '《桂花雨》摘抄好句', '《珍珠鸟》阅读笔记'] },
+      { title: '第二单元 · 速读要有方法', tasks: ['《搭石》默读训练', '《将相和》故事复述', '《什么比猎豹的速度更快》速读', '《冀中的地道战》段落概括', '单元习作：漫画老师'] },
+      { title: '第三单元 · 民间故事', tasks: ['《猎人海力布》情节梳理', '《牛郎织女》故事续写', '民间故事搜集一条', '口语交际：讲民间故事', '单元测试复习'] },
+      { title: '第四单元 · 家国情怀', tasks: ['《古诗三首》背诵默写', '《少年中国说》朗读', '《圆明园的毁灭》读后感', '《示儿》诗意理解', '爱国主题摘抄'] },
+      { title: '第五单元 · 说明文阅读', tasks: ['《太阳》说明方法找一找', '《松鼠》结构分析', '写一篇说明文片段', '说明方法练习5题', '单元词语盘点'] },
+      { title: '第六单元 · 舐犊之情', tasks: ['《慈母情深》精读', '《父爱之舟》批注', '《枫桥夜泊》背诵', '《长相思》诗意赏析', '亲情主题小练笔'] },
+      { title: '第七单元 · 景物描写', tasks: ['《山居秋暝》默写', '《四季之美》仿写', '《鸟的天堂》景物描写', '《月迹》阅读', '写景段落练习'] },
+      { title: '第八单元 · 读书明智', tasks: ['《古人谈读书》背诵', '《忆读书》读后感', '《我的"长生果"》批注', '推荐一本好书', '期末复习计划'] }
+    ]
+  },
+  {
+    id: 'math', name: '数学', icon: '🔢', color: '#3498db',
+    units: [
+      { title: '第一单元 · 小数乘法', tasks: ['小数乘整数练习', '小数乘小数竖式', '积的近似数', '整数乘法运算定律推广', '单元综合练习'] },
+      { title: '第二单元 · 位置', tasks: ['用数对确定位置', '图形平移与旋转', '位置与方向', '坐标系基础练习', '单元小测'] },
+      { title: '第三单元 · 小数除法', tasks: ['除数是整数的小数除法', '除数是小数的除法', '商的近似数', '循环小数认识', '解决问题（进一/去尾）'] },
+      { title: '第四单元 · 可能性', tasks: ['事件的可能性判断', '摸球实验记录', '游戏公平性分析', '可能性大小比较', '单元复习'] },
+      { title: '第五单元 · 简易方程', tasks: ['用字母表示数', '方程的意义', '等式的性质', '解简易方程', '列方程解决问题'] },
+      { title: '第六单元 · 多边形的面积', tasks: ['平行四边形面积', '三角形面积', '梯形面积', '组合图形面积', '面积单位换算'] }
+    ]
+  },
+  {
+    id: 'english', name: '英语', icon: '🔤', color: '#9b59b6',
+    units: [
+      { title: 'Unit 1 · Where are you from?', tasks: ['单词听写 Unit 1', '对话朗读 Where are you from?', '国家名称拼写', '句型练习5句', '课文背诵第1段'] },
+      { title: 'Unit 2 · My favourite season', tasks: ['四季单词复习', 'What\'s your favourite season?', '描述喜欢的季节', '听力练习 Unit 2', '写作：My favourite season'] },
+      { title: 'Unit 3 · My school calendar', tasks: ['月份单词听写', 'When is...? 句型', '学校活动日历', '对话角色扮演', '单元词汇测试'] },
+      { title: 'Unit 4 · When is Easter?', tasks: ['节日词汇学习', 'When is...? 问答', '节日文化了解', '朗读课文', '节日介绍小作文'] },
+      { title: 'Unit 5 · Whose dog is it?', tasks: ['物主代词练习', 'Whose...is it? 句型', '描述动物特征', '看图说话', '单元复习'] },
+      { title: 'Unit 6 · Work quietly!', tasks: ['祈使句练习', 'Work quietly! 课文', '课堂规则英语表达', '听力填空', '口语对话'] }
+    ]
+  },
+  {
+    id: 'science', name: '科学', icon: '🔬', color: '#1abc9c',
+    units: [
+      { title: '第一单元 · 光', tasks: ['光的传播实验', '光的反射观察', '折射现象记录', '彩虹形成原理', '单元知识梳理'] },
+      { title: '第二单元 · 地球表面的变化', tasks: ['岩石观察记录', '风化作用了解', '河流对地貌的影响', '地震与火山知识', '地形变化小报'] },
+      { title: '第三单元 · 运动和力', tasks: ['力的作用实验', '摩擦力大小探究', '重力与弹力', '运动状态变化', '单元实验报告'] },
+      { title: '第四单元 · 简单机械', tasks: ['杠杆原理实验', '滑轮组认识', '斜面省力探究', '机械组合应用', '生活中的机械'] }
+    ]
+  },
+  {
+    id: 'moral', name: '道法', icon: '⚖️', color: '#e67e22',
+    units: [
+      { title: '第一单元 · 我们的守护者', tasks: ['法律的作用了解', '宪法是根本大法', '权利与义务讨论', '法治小故事', '单元思考题'] },
+      { title: '第二单元 · 我们是公民', tasks: ['公民的含义', '公民的基本权利', '公民的基本义务', '尊重他人权利', '单元练习'] },
+      { title: '第三单元 · 我们的国家', tasks: ['国家机构了解', '全国人民代表大会', '国旗国徽国歌', '爱国行为讨论', '单元复习'] },
+      { title: '第四单元 · 感受家乡文化', tasks: ['家乡文化调查', '传统节日了解', '非物质文化遗产', '文化保护讨论', '家乡文化小报'] }
+    ]
+  },
+  {
+    id: 'pe', name: '体育', icon: '⚽', color: '#27ae60',
+    units: [
+      { title: '体能训练', tasks: ['跳绳 500 个', '仰卧起坐 50 个', '跑步 15 分钟', '拉伸放松 10 分钟', '体能自测记录'] },
+      { title: '球类技能', tasks: ['篮球运球 10 分钟', '足球颠球 50 次', '排球垫球练习', '羽毛球对打', '球类规则复习'] },
+      { title: '健康知识', tasks: ['眼保健操 2 次', '营养膳食了解', '运动安全知识', '作息规律记录', '健康小笔记'] }
+    ]
+  },
+  {
+    id: 'art', name: '音美', icon: '🎨', color: '#e91e63',
+    units: [
+      { title: '美术', tasks: ['素描练习 30 分钟', '色彩调配实验', '剪纸作品一幅', '名画欣赏笔记', '创意手工制作'] },
+      { title: '音乐', tasks: ['声乐练习 20 分钟', '乐器练习 15 分钟', '乐理知识复习', '歌曲欣赏与感受', '节奏训练'] }
+    ]
+  },
+  {
+    id: 'general', name: '综合', icon: '📋', color: '#607d8b',
+    units: [
+      { title: '信息技术', tasks: ['打字练习 15 分钟', '安全上网知识', '办公软件基础', '信息检索练习', '编程启蒙了解'] },
+      { title: '劳动实践', tasks: ['整理房间', '帮厨一项', '垃圾分类实践', '种植观察记录', '劳动日记'] },
+      { title: '阅读拓展', tasks: ['课外阅读 30 分钟', '读书笔记 1 篇', '好书推荐分享', '阅读打卡', '阅读计划更新'] }
+    ]
+  }
+];
+
+const REWARDS = [
+  { id: 'cartoon', name: '看一集动画片', desc: '完成兑换后请家长确认', cost: 60 },
+  { id: 'game', name: '玩 30 分钟游戏', desc: '完成兑换后请家长确认', cost: 120 },
+  { id: 'outing', name: '周末外出游玩', desc: '完成兑换后请家长确认', cost: 300 }
+];
+
+const TASK_REWARD = 5;
+const CHECKIN_REWARD = 20;
+const STORAGE_KEY = 'sunshine_learning_v1';
+
+let state = loadState();
+let currentSubject = SUBJECTS[0].id;
+
+function defaultState() {
+  return {
+    childName: '小阳光',
+    sunshine: 0,
+    streak: 0,
+    lastCheckin: '',
+    completedTasks: {},
+    redeemedRewards: []
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? { ...defaultState(), ...JSON.parse(raw) } : defaultState();
+  } catch {
+    return defaultState();
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function taskKey(subjectId, unitIdx, taskIdx) {
+  return `${subjectId}:${unitIdx}:${taskIdx}`;
+}
+
+function getLevel(sunshine) {
+  if (sunshine >= 1000) return 5;
+  if (sunshine >= 600) return 4;
+  if (sunshine >= 300) return 3;
+  if (sunshine >= 100) return 2;
+  return 1;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function getAllTasks() {
+  const tasks = [];
+  SUBJECTS.forEach(sub => {
+    sub.units.forEach((unit, ui) => {
+      unit.tasks.forEach((name, ti) => {
+        tasks.push({
+          subjectId: sub.id,
+          subjectName: sub.name,
+          unitIdx: ui,
+          taskIdx: ti,
+          name,
+          key: taskKey(sub.id, ui, ti),
+          done: !!state.completedTasks[taskKey(sub.id, ui, ti)]
+        });
+      });
+    });
+  });
+  return tasks;
+}
+
+function getSubjectProgress(subject) {
+  let total = 0, done = 0;
+  subject.units.forEach((unit, ui) => {
+    unit.tasks.forEach((_, ti) => {
+      total++;
+      if (state.completedTasks[taskKey(subject.id, ui, ti)]) done++;
+    });
+  });
+  return total ? Math.round((done / total) * 100) : 0;
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = SUBJECTS.map(sub => {
+    const active = sub.id === currentSubject ? 'active' : '';
+    const progress = getSubjectProgress(sub);
+    return `<button class="subject-btn ${active}" data-id="${sub.id}" style="${active ? `background:${sub.color}` : ''}" title="${sub.name} ${progress}%">
+      <span class="icon">${sub.icon}</span>
+      <span>${sub.name}</span>
+    </button>`;
+  }).join('');
+  sidebar.querySelectorAll('.subject-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentSubject = btn.dataset.id;
+      render();
+    });
+  });
+}
+
+function renderRecommend() {
+  const list = document.getElementById('recommendList');
+  const undone = getAllTasks().filter(t => !t.done);
+  const picks = shuffle(undone).slice(0, 3);
+  if (!picks.length) {
+    list.innerHTML = '<p style="color:#999;font-size:14px;">🎉 太棒了，所有任务都完成了！</p>';
+    return;
+  }
+  list.innerHTML = picks.map(t => `
+    <div class="recommend-item" data-subject="${t.subjectId}" data-ui="${t.unitIdx}" data-ti="${t.taskIdx}">
+      <span class="tag">${t.subjectName}</span>
+      <span>${t.name}</span>
+      <span class="reward">+${TASK_REWARD}☀️</span>
+    </div>
+  `).join('');
+  list.querySelectorAll('.recommend-item').forEach(item => {
+    item.addEventListener('click', () => {
+      currentSubject = item.dataset.subject;
+      render();
+      const key = taskKey(item.dataset.subject, +item.dataset.ui, +item.dataset.ti);
+      if (!state.completedTasks[key]) toggleTask(key);
+    });
+  });
+}
+
+function renderSubject() {
+  const sub = SUBJECTS.find(s => s.id === currentSubject);
+  if (!sub) return;
+  const progress = getSubjectProgress(sub);
+  document.getElementById('subjectTitle').innerHTML = `${sub.icon} ${sub.name}`;
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressFill').style.background = sub.color;
+  document.getElementById('progressText').textContent = progress + '%';
+  document.getElementById('progressText').style.color = sub.color;
+
+  const grid = document.getElementById('unitsGrid');
+  grid.innerHTML = sub.units.map((unit, ui) => `
+    <div class="unit-card">
+      <h4>${unit.title}</h4>
+      <div class="task-list">
+        ${unit.tasks.map((name, ti) => {
+          const key = taskKey(sub.id, ui, ti);
+          const done = !!state.completedTasks[key];
+          return `<div class="task-item ${done ? 'done' : ''}" data-key="${key}">
+            <div class="task-checkbox">${done ? '✓' : ''}</div>
+            <span class="task-name">${name}</span>
+            <span class="task-reward">+${TASK_REWARD}☀️</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.task-item').forEach(item => {
+    item.addEventListener('click', () => toggleTask(item.dataset.key));
+  });
+}
+
+function renderHeader() {
+  document.getElementById('childName').value = state.childName;
+  document.getElementById('streakDays').textContent = state.streak;
+  document.getElementById('sunshine').textContent = state.sunshine;
+  document.getElementById('level').textContent = getLevel(state.sunshine);
+  document.getElementById('shopBalance').textContent = state.sunshine;
+
+  const today = todayStr();
+  const btn = document.getElementById('checkinBtn');
+  if (state.lastCheckin === today) {
+    btn.disabled = true;
+    btn.textContent = '✅ 今日已打卡';
+  } else {
+    btn.disabled = false;
+    btn.textContent = '📅 今日打卡 +20☀️';
+  }
+}
+
+function renderShop() {
+  document.getElementById('shopList').innerHTML = REWARDS.map(r => {
+    const canAfford = state.sunshine >= r.cost;
+    return `<div class="shop-item">
+      <div class="shop-item-info">
+        <h4>${r.name}</h4>
+        <p>${r.desc}</p>
+      </div>
+      <span class="cost">${r.cost}☀️</span>
+      <button class="shop-btn" data-id="${r.id}" ${canAfford ? '' : 'disabled'}>兑换</button>
+    </div>`;
+  }).join('');
+  document.getElementById('shopList').querySelectorAll('.shop-btn').forEach(btn => {
+    btn.addEventListener('click', () => redeemReward(btn.dataset.id));
+  });
+}
+
+function render() {
+  renderHeader();
+  renderSidebar();
+  renderRecommend();
+  renderSubject();
+  renderShop();
+}
+
+function toggleTask(key) {
+  if (state.completedTasks[key]) {
+    delete state.completedTasks[key];
+    state.sunshine = Math.max(0, state.sunshine - TASK_REWARD);
+    showToast(`取消任务，-${TASK_REWARD}☀️`);
+  } else {
+    state.completedTasks[key] = true;
+    state.sunshine += TASK_REWARD;
+    showToast(`完成任务！+${TASK_REWARD}☀️`);
+  }
+  saveState();
+  render();
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function yesterdayStr() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function doCheckin() {
+  const today = todayStr();
+  if (state.lastCheckin === today) return;
+  const yesterday = yesterdayStr();
+  if (state.lastCheckin === yesterday) {
+    state.streak += 1;
+  } else {
+    state.streak = 1;
+  }
+  state.lastCheckin = today;
+  state.sunshine += CHECKIN_REWARD;
+  saveState();
+  showToast(`打卡成功！+${CHECKIN_REWARD}☀️ 连续 ${state.streak} 天`);
+  render();
+}
+
+function redeemReward(id) {
+  const reward = REWARDS.find(r => r.id === id);
+  if (!reward || state.sunshine < reward.cost) return;
+  state.sunshine -= reward.cost;
+  state.redeemedRewards.push({ id, date: todayStr() });
+  saveState();
+  showToast(`兑换成功：${reward.name}（请找家长确认哦）`);
+  render();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `阳光学习能量站_${state.childName}_${todayStr()}.json`;
+  a.click();
+  showToast('数据已导出');
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      state = { ...defaultState(), ...data };
+      saveState();
+      render();
+      showToast('数据导入成功！');
+    } catch {
+      showToast('导入失败，文件格式不对');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('childName').addEventListener('change', e => {
+  state.childName = e.target.value || '小阳光';
+  saveState();
+});
+document.getElementById('childName').addEventListener('blur', e => {
+  state.childName = e.target.value || '小阳光';
+  saveState();
+});
+document.getElementById('checkinBtn').addEventListener('click', doCheckin);
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e => {
+  if (e.target.files[0]) importData(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('shopFab').addEventListener('click', () => {
+  document.getElementById('shopModal').classList.add('show');
+  renderShop();
+});
+document.getElementById('shopClose').addEventListener('click', () => {
+  document.getElementById('shopModal').classList.remove('show');
+});
+document.getElementById('shopModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+
+render();
+</script>
+</body>
+</html>
